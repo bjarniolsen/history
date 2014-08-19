@@ -1,0 +1,60 @@
+//--------------------------------------
+// Created: 29-11-2013
+// Created by: Nicolaj Lund Nielsen
+// Modifiers:
+//--------------------------------------
+
+// Font Setup
+@import "less/_font";
+
+// Core variables and mixins
+@import "less/_variables";
+@import "less/_mixins";
+
+// Normalize
+@import "less/_normalize";
+
+/* ==============
+    GENEREL ELEMENTS
+   ============== */
+
+body {
+	margin: 0;
+	padding: 0;
+    color: @text-color;
+	overflow-y: scroll;
+	font: 12px Arial, Helvetica, sans-serif;
+	background: @body-bg;
+	line-height: 1.4;
+}
+
+::-moz-selection {
+	background: #faad17;
+	color: #333132;
+	text-shadow: none;
+}
+
+::selection {
+	background: #faad17;
+	color: #333132;
+	text-shadow: none;
+}
+
+input, textarea:focus, input:focus {
+	outline: 0;
+	border: 0;
+}
+
+img {
+	max-width:100%;
+	height:auto;
+}
+
+/* ==============
+    DIS/PLAY CSS
+   ============== */
+
+
+
+// Helper classes
+@import "less/_helpers";
