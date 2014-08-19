@@ -1,6 +1,6 @@
-# Playbook
+# Test site
 
-Statisk website som ligger på http://playbook.dis-play.dk 
+Statisk website
 
 ## Installering
 
