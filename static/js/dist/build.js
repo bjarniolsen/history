@@ -8,6 +8,7 @@
 /*
  * TODO: Add CSS and Images now
  * TODO: Get all text from book. Jesper?
+ * TODO: Add HTML/HEAD... to all pages
  *
  */
 
@@ -29,7 +30,7 @@ jQuery(function ($) {
             options.pageNumber = undefined;
             // Cache some dom
             options.root = $(".site-wrapper");
-            options.content = options.root.find(".site-content");
+            options.content = options.root.find(".content-wrapper");
             options.paginator = options.root.find(".paginator");
             options.paginator.next = options.paginator.find(".next");
             options.paginator.prev = options.paginator.find(".prev");
