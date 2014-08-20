@@ -6,8 +6,8 @@
 */
 
 /*
- * TODO: Is history API needed?
- * TODO: Use cookiea again?
+ * TODO: Add CSS and Images now
+ * TODO: Get all text from book. Jesper?
  *
  */
 
@@ -23,9 +23,10 @@ jQuery(function ($) {
                 Engine.fixes.init();
             });
             var options = {};
-            // Default site state
-        	options.url = "/sider/forside.html";
-            //options.pageNumber = "";
+            // Load frontpage on first init
+            // unless cookie has page information
+        	options.url = "/sider/side0.html";
+            options.pageNumber = undefined;
             // Cache some dom
             options.root = $(".site-wrapper");
             options.content = options.root.find(".site-content");
@@ -34,73 +35,95 @@ jQuery(function ($) {
             options.paginator.prev = options.paginator.find(".prev");
             options.menu = options.root.find(".menu");
             options.menuItems = options.menu.find("li > a");
-            // Custom events
+            // Custom event
             $(document).bind("load.page", function(event, options) {
-				console.log(history.state);
-				Engine.ui.open2(options);
+				Engine.ui.open(options);
             });
 			// Click events
 			options.paginator.next.on("click", function() {
-				history.forward();
-				//Engine.ui.open(options, options.url, options.pageNumber, "next");
-				/*options.paginator = "next";
-				$(document).trigger("load.page", options);*/
+				options.pageturner = "next";
+				$(document).trigger("load.page", options);
 			});
 			options.paginator.prev.on("click", function() {
-				history.back();
-				//Engine.ui.open(options, options.url, options.pageNumber, "prev");
-				/*options.paginator = "prev";
-				$(document).trigger("load.page", options);*/
+				options.pageturner = "prev";
+				$(document).trigger("load.page", options);
 			});
             options.menuItems.each(function(i, link) {
             	$(link).on("click", function(event) {
             		event.preventDefault();
-            		options.url = event.target.href;
-					history.pushState(options.url, event.target.textContent, options.url);
+            		options.pageturner = "";
+            		options.url = $(this)[0].pathname;
 					$(document).trigger("load.page", options);
-					//Engine.ui.open2(options);
             	});
             });
-			window.addEventListener('popstate', function(event) {
-				console.log('popstate fired!', event.state);
-				options.url = event.state;
-				$(document).trigger("load.page", options);
-			});
-			console.log(history.state, document.location.pathname);
-			/*if (!document.location.pathname === "/") {
-				console.log("path er ikke /");
-				document.location.href = "/hest";
-			}*/
-			history.replaceState(document.location.href, document.title, document.location.href);
-			$(document).trigger("load.page", options);
             // Check page status cookie.
             // If cookie stores page and pagenumber then open that page.
-            /*var pageStatus = Engine.cookie.read('playbook');
-            if (pageStatus) {
-            	options.url = pageStatus.split(",")[0];
-            	options.pageNumber = pageStatus.split(",")[1];
-				Engine.ui.open(options, options.url, options.pageNumber);
-            }*/
+			var pageStatus = Engine.cookie.read('playbook');
+			if (pageStatus) {
+				options.url = pageStatus.split(",")[0];
+				options.pageNumber = pageStatus.split(",")[1];
+			}
+			$(document).trigger("load.page", options);
         },
-        fixes: {
-            init: function () {                
-				// Fix functions goes here
-            }
-        },        
         ui: {
+        	open: function(options) {
+        		if (!options.pageNumber) {
+        			// Try to get pageNumber from url
+        			options.pageNumber = options.url.match(/\d/g);
+        			if (options.pageNumber) {
+        				Engine.ui.urlHandler(options);
+        			}
+        		} else {
+        			// Get pageNumber from url
+        			options.pageNumber = options.url.match(/\d/g);
+        		}
+        		if (options.pageturner) {
+        			// Previous page button pressed
+        			if (options.pageturner === "prev") {
+        				if (options.pageNumber >= 1) {
+        					options.pageNumber--;
+        					Engine.ui.urlHandler(options);
+        				}
+        			}
+        			// Next page button pressed
+        			if (options.pageturner === "next") {
+        				options.pageNumber++;
+        				Engine.ui.urlHandler(options);
+        			}
+        		} else {
+        			Engine.ui.urlHandler(options);
+        		}
+        		// Get url content and add it to the page
+        		options.content.load(options.url, function(response, textStatus, xhr) {
+            		// If external page don't exists then roll back the pagenumber
+            		// and append that to the url
+            		if (textStatus === "error") {
+        				console.log("error");
+        				options.pageNumber--;
+        				Engine.ui.urlHandler(options);
+            		}
+            		if (textStatus === "success") {
+            			Engine.cookie.create('playbook', [ options.url, options.pageNumber ], 2);
+            		}
+        		});
+        	},
+        	urlHandler: function(options) {
+        		// Append pageNumber to url
+        		options.pageNumber = parseInt(options.pageNumber);
+        		return options.url = options.url.replace(/\d/g, options.pageNumber);
+        	},
         	open2: function(options) {
-        		//console.log(options, data);
         		if (options.url === "" || options.url == null) {
         			console.log("history state is null");
         			options.url = "/sider/forside.html";
         		}
         		// Previous page button pressed
-        		if (options.paginator === "prev") {
+        		if (options.pageturner === "prev") {
         			console.log("prev was clicked");
         			return false;
         		}
         		// Next page button pressed
-        		if (options.paginator === "next") {
+        		if (options.pageturner === "next") {
         			console.log("next was clicked");
         			return false;
         		}
@@ -110,42 +133,6 @@ jQuery(function ($) {
             		if (textStatus === "error") {
             		}
             		if (textStatus === "success") {
-            		}
-        		});
-        	},
-        	open: function(options, url, pageNumber, paginator) {
-        		// If we don't have a pageNumber then get it from url
-        		// else set pageNumber on options object
-        		if (!pageNumber) {
-        			options.pageNumber = url.match(/\d/g)[0];
-        		} else {
-        			options.pageNumber = pageNumber;
-        		}
-        		// Previous page button pressed
-        		if (paginator === "prev") {
-        			if (options.pageNumber > 1) {
-        				options.pageNumber--;
-        			}
-        		}
-        		// Next page button pressed
-        		if (paginator === "next") {
-        			options.pageNumber++;
-        		}
-        		// Append pageNumber to url
-        		options.url = url.replace(/\d/g, options.pageNumber);
-        		// Get url content and add it to the page
-        		options.content.load(options.url, function(response, textStatus, xhr) {
-            		// If external page don't exists then roll back the pagenumber
-            		// and append that to the url
-            		if (textStatus === "error") {
-        				options.pageNumber--;
-        				options.url = url.replace(/\d/g, options.pageNumber);
-            		}
-            		if (textStatus === "success") {
-            			console.log(window.history);
-            			var stateObj = Engine.cookie.read('playbook');
-            			//window.history.pushState(stateObj, "Side " + options.pageNumber, options.url);
-            			//Engine.cookie.create('playbook', [ options.url, options.pageNumber ], 2);
             		}
         		});
         	},
@@ -177,7 +164,12 @@ jQuery(function ($) {
 			erase: function (name) {
 				cookie.create(name, "", -1);
 			}
-		}
+		},
+        fixes: {
+            init: function () {                
+				// Fix functions goes here
+            }
+        }        
     }
     // Initialize main script-Engine;
     Engine.init();
