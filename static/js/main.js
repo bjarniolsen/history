@@ -6,6 +6,7 @@
 */
 
 /*
+ * TODO: Keep a page's html in wrapper when loading a new page.
  * TODO: Add CSS and Images now
  * TODO: Get all text from book. Jesper?
  * TODO: Add HTML/HEAD... to all pages
