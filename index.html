@@ -18,22 +18,45 @@
 	<body>
 
 		<div class="site-wrapper">
-			<h1>Playbook DIS/PLAY</h1>
-
-			<ul class="menu">
-				<li><a href="/sider/side1.html" title="">Side 1</a></li>
-				<li><a href="/sider/side2.html" title="">Side 2</a></li>
-				<li><a href="/sider/side3.html" title="">Side 3</a></li>
-				<li><a href="/sider/side4.html" title="">Side 4</a></li>
-			</ul>
-
+			<h1 class="site-wrapper__title">Playbook DIS/PLAY</h1>
 			<div class="site-content">
-				<div class="content-wrapper"></div>
-				<div class="paginator">
-					<button class="prev">Forrige side</button>
-					<button class="next">Næste side</button>
+
+				<div class="site-content__wrapper dummy">
+					<div class="page">
+						<div class="col">
+							<h1>Forside</h1>
+							<p>Og noget tekst til forsiden</p>
+							<div class="image-wrap">
+								<img src="/static/media/images/playbook.png" data-src="/static/media/images/playbook2.png" alt=""/>
+							</div>
+						</div>
+						<div class="col">
+							<h1>Side 1</h1>
+							<p>Og noget tekst til side 1</p>
+							<div class="image-wrap">
+								<img src="/static/media/images/playbook4.png" data-src="/static/media/images/playbook3.png" alt=""/>
+							</div>
+						</div>
+					</div>
 				</div>
-			</div>
+
+				<ul class="primary-nav">
+					<li class="primary-nav__item"><a href="/sider/side1.html" class="primary-nav__link" title="">A</a></li>
+					<li class="primary-nav__item"><a href="/sider/side2.html" class="primary-nav__link" title="">B</a></li>
+					<li class="primary-nav__item"><a href="/sider/side3.html" class="primary-nav__link" title="">C</a></li>
+					<li class="primary-nav__item"><a href="/sider/side4.html" class="primary-nav__link" title="">D</a></li>
+					<li class="primary-nav__item"><a href="/sider/side1.html" class="primary-nav__link" title="">A</a></li>
+					<li class="primary-nav__item"><a href="/sider/side2.html" class="primary-nav__link" title="">B</a></li>
+					<li class="primary-nav__item"><a href="/sider/side3.html" class="primary-nav__link" title="">C</a></li>
+					<li class="primary-nav__item"><a href="/sider/side4.html" class="primary-nav__link" title="">D</a></li>
+				</ul>
+
+				<div class="site-content__paginator js-paginator">
+					<button class="site-content__paginator__prev js-paginator__prev">Forrige side</button>
+					<button class="site-content__paginator__next js-paginator__next">Næste side</button>
+				</div>
+
+			</div><!-- end.site-content -->
 		</div>
 
         <script src="/static/js/main.js"></script>

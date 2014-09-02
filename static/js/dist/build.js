@@ -1,13 +1,15 @@
 /* DIS/PLAY Script 
-    Author's name: Nicolaj Lund Nielsen
+    Author's name: Bjanri Olsen
     Modified by:
     Client name: DIS/PLAY
-    Date of creation: 18 / 8 2014
+    Date of creation: 20 / 8 2014
 */
 
 /*
- * TODO: Add CSS and Images now
- * TODO: Get all text from book. Jesper?
+ * TODO: Fix the fucking timing for animations, stupid!!
+ * TODO: Should animation be JS?
+ * TODO: Add CSS, Images
+ * TODO: Add text to pages and add media queries
  * TODO: Add HTML/HEAD... to all pages
  *
  */
@@ -16,44 +18,70 @@ jQuery.noConflict();
 jQuery(function ($) {
     Engine = {
         init: function () {
-            $(document).ready(function ($) {
-
-            });
-            $(window).load(function ($) {
-                // Her kører vi onload funktioner
-                Engine.fixes.init();
-            });
             var options = {};
+        	// all pages in this folder
+        	options._PAGEDIR_ = "/sider/";
             // Load frontpage on first init
             // unless cookie has page information
-        	options.url = "/sider/side0.html";
-            options.pageNumber = undefined;
+        	options.url = "side0";
+            options.pageNumber = 0;
             // Cache some dom
             options.root = $(".site-wrapper");
-            options.content = options.root.find(".content-wrapper");
-            options.paginator = options.root.find(".paginator");
-            options.paginator.next = options.paginator.find(".next");
-            options.paginator.prev = options.paginator.find(".prev");
-            options.menu = options.root.find(".menu");
-            options.menuItems = options.menu.find("li > a");
+            options.menu = options.root.find(".primary-nav");
+            options.menuItems = options.menu.find(".primary-nav__link");
+            options.content = options.root.find(".site-content");
+			// we need to set a height on the page wrapper
+			options.content.css("height", $(".dummy img").height());
+            options.paginator = options.root.find(".js-paginator");
+            options.paginator.next = options.paginator.find(".js-paginator__next");
+            options.paginator.prev = options.paginator.find(".js-paginator__prev");
             // Custom event
             $(document).bind("load.page", function(event, options) {
-				Engine.ui.open(options);
+        		if ($('#' + options.url).length) {
+					Engine.ui.showPage(options);
+				} else {
+					Engine.ui.getPage(options);
+				}
+            });
+            options.menu.on("click", function() {
+            	if($(this).hasClass("is-active")) {
+            		$(this).removeClass("is-active");
+            	} else {
+            		$(this).addClass("is-active");
+            	}
             });
 			// Click events
 			options.paginator.next.on("click", function() {
 				options.pageturner = "next";
+        		// get pageNumber from url
+        		options.pageNumber = options.url.match(/\d/g);
+        		options.pageNumber++;
+        		// Append pageNumber to url
+        		options.url = options.url.replace(/\d/g, options.pageNumber);
+        		// disable button
+        		Engine.ui.button.disable($(this));
 				$(document).trigger("load.page", options);
 			});
 			options.paginator.prev.on("click", function() {
 				options.pageturner = "prev";
-				$(document).trigger("load.page", options);
+        		// get pageNumber from url
+        		options.pageNumber = options.url.match(/\d/g);
+        		if (options.pageNumber >= 1) {
+        			options.pageNumber--;
+        			// Append pageNumber to url
+        			options.url = options.url.replace(/\d/g, options.pageNumber);
+        			// disable button
+        			Engine.ui.button.disable($(this));
+					$(document).trigger("load.page", options);
+        		} else {
+        			Engine.ui.button.disable($(this));
+        		}
 			});
             options.menuItems.each(function(i, link) {
             	$(link).on("click", function(event) {
             		event.preventDefault();
-            		options.pageturner = "";
-            		options.url = $(this)[0].pathname;
+            		// only get page name from url - side1, side2, sidex...
+            		options.url = $(this)[0].pathname.split("/").pop().replace(".html", "");
 					$(document).trigger("load.page", options);
             	});
             });
@@ -64,82 +92,106 @@ jQuery(function ($) {
 				options.url = pageStatus.split(",")[0];
 				options.pageNumber = pageStatus.split(",")[1];
 			}
-			$(document).trigger("load.page", options);
+			window.setTimeout(function() {
+				if (pageStatus) {
+					$(".dummy").addClass("animatePrev");
+				}
+				$(document).trigger("load.page", options);
+			}, 900);
         },
         ui: {
-        	open: function(options) {
-        		if (!options.pageNumber) {
-        			// Try to get pageNumber from url
-        			options.pageNumber = options.url.match(/\d/g);
-        			if (options.pageNumber) {
-        				Engine.ui.urlHandler(options);
-        			}
-        		} else {
-        			// Get pageNumber from url
-        			options.pageNumber = options.url.match(/\d/g);
-        		}
-        		if (options.pageturner) {
-        			// Previous page button pressed
-        			if (options.pageturner === "prev") {
-        				if (options.pageNumber >= 1) {
-        					options.pageNumber--;
-        					Engine.ui.urlHandler(options);
-        				}
-        			}
-        			// Next page button pressed
-        			if (options.pageturner === "next") {
-        				options.pageNumber++;
-        				Engine.ui.urlHandler(options);
-        			}
-        		} else {
-        			Engine.ui.urlHandler(options);
-        		}
-        		// Get url content and add it to the page
-        		options.content.load(options.url, function(response, textStatus, xhr) {
-            		// If external page don't exists then roll back the pagenumber
-            		// and append that to the url
-            		if (textStatus === "error") {
-        				console.log("error");
-        				options.pageNumber--;
-        				Engine.ui.urlHandler(options);
-            		}
-            		if (textStatus === "success") {
-            			Engine.cookie.create('playbook', [ options.url, options.pageNumber ], 2);
-            		}
-        		});
-        	},
-        	urlHandler: function(options) {
-        		// Append pageNumber to url
-        		options.pageNumber = parseInt(options.pageNumber);
-        		return options.url = options.url.replace(/\d/g, options.pageNumber);
-        	},
-        	open2: function(options) {
-        		if (options.url === "" || options.url == null) {
-        			console.log("history state is null");
-        			options.url = "/sider/forside.html";
-        		}
-        		// Previous page button pressed
-        		if (options.pageturner === "prev") {
-        			console.log("prev was clicked");
-        			return false;
-        		}
-        		// Next page button pressed
-        		if (options.pageturner === "next") {
-        			console.log("next was clicked");
-        			return false;
+        	showPage: function(options) {
+				$(".site-content__wrapper").hide().removeClass("animateCurrent animatePrev");
+				$('#' + options.previousPage).show().css("z-index", 2).addClass("animatePrev");
+				$('#' + options.url).show().css("z-index", 3).addClass("animateCurrent");
+				options.previousPage = options.url;
+				window.setTimeout(function() {
+					$(".site-content__wrapper").removeClass("animateCurrent animatePrev");
+        			Engine.ui.button.enable([ options.paginator.next, options.paginator.prev ]);
+				}, 900);
+			},
+			getPage: function(options) {
+
+        		if (options.previousPage) {
+					$(".site-content__wrapper").hide().removeClass("animateCurrent animatePrev");
+					$('#' + options.previousPage).show().css("z-index", 2).addClass("animatePrev");
         		}
 
-        		//var url = data.split(",")[0];
-        		options.content.load(options.url, function(response, textStatus, xhr) {
-            		if (textStatus === "error") {
-            		}
-            		if (textStatus === "success") {
-            		}
-        		});
+        		// Get url content and add it to the page
+        		var pageToLoad = options._PAGEDIR_ + options.url + ".html";
+                $.get(pageToLoad)
+                    .done(function(response) {
+						// create new dom element and add new html to it
+						var cache = Engine.ui.addPageToDom(options, response);
+						// and add it to our wrapper
+						cache.addClass("animateCurrent");
+						options.content.prepend(cache);
+						cache = "";
+						// save page state
+						options.previousPage = options.url;
+						window.setTimeout(function() {
+							// remove animate class from pages
+							$(".site-content__wrapper").removeClass("animateCurrent animatePrev");
+        					Engine.ui.button.enable([ options.paginator.next, options.paginator.prev ]);
+        					//Engine.ui.preload(options);
+						}, 1000);
+						Engine.cookie.create('playbook', [ options.url, options.pageNumber ], 2);
+                    })
+					.fail(function() {
+						console.log("last page");
+						// this is the last page, so lets start over
+						options.pageNumber = 0;
+        				// Append pageNumber to url
+        				options.url = options.url.replace(/\d/g, options.pageNumber);
+        				Engine.ui.button.disable(options.paginator.next);
+						$(document).trigger("load.page", options);
+					});
         	},
-        	preload: function(options, url) {
-        		// ...
-        	}
+        	addPageToDom: function(options, response) {
+            	return $('<div class="site-content__wrapper" id="' + options.url + '">' + response + '</div>');
+        	},
+        	button: {
+        		disable: function(button) {
+        			if (button instanceof Array) {
+        				$(button).each(function() {
+        					$(this).attr("disabled", "disabled");
+        				});
+        			} else {
+        				$(button).attr("disabled", "disabled");
+        			}
+        		},
+        		enable: function(button) {
+        			if (button instanceof Array) {
+        				$(button).each(function() {
+        					$(this).removeAttr("disabled");
+        				});
+        			} else {
+        				$(button).removeAttr("disabled");
+        			}
+        		}
+        	},
+			preload: function(options) {
+        		// get pageNumber from url
+        		options.pageNumber = options.url.match(/\d/g);
+        		options.pageNumber++;
+        		// Append pageNumber to url
+        		options.url = options.url.replace(/\d/g, options.pageNumber);
+        		// Get url content and add it to the page
+        		var pageToLoad = options._PAGEDIR_ + options.url + ".html";
+                $.get(pageToLoad)
+                    .done(function(response) {
+						console.log("page: ", options.url, " preloaded");
+						// create new dom element and add new html to it
+						var cache = Engine.ui.addPageToDom(options, response);
+						// and add it to our wrapper
+						options.content.prepend(cache);
+						cache = "";
+						// save page state
+                    })
+					.fail(function() {
+						console.log("preload failed");
+					});
+			}
         },
 		cookie: {
 			create: function (name, value, days) {
@@ -165,16 +217,37 @@ jQuery(function ($) {
 			erase: function (name) {
 				cookie.create(name, "", -1);
 			}
-		},
-        fixes: {
-            init: function () {                
-				// Fix functions goes here
-            }
-        }        
+		}       
     }
     // Initialize main script-Engine;
     Engine.init();
 });
+
+/*
+					options.content.load(pageToLoad, function(response, textStatus, xhr) {
+					 	 //If external page don't exists then roll back the pagenumber
+					 	 //and append that to the url
+						if (textStatus === "error") {
+							console.log("error");
+							options.pageNumber--;
+							Engine.ui.urlHandler(options);
+						}
+						if (textStatus === "success") {
+							var cache = Engine.ui.addPageToDom(options);
+							cache.append(response);
+							//options.content.prepend(cache);
+							cache = "";
+							// save page state
+							options.previousPage = options.url;
+							window.setTimeout(function() {
+								$(".site-content__wrapper").hide().removeClass("animate");
+								$('#' + options.url).show();
+								console.log("pages is now hidden");
+							}, 3000);
+							Engine.cookie.create('playbook', [ options.url, options.pageNumber ], 2);
+						}
+					});
+ */
 
 // Avoid `console` errors in browsers that lack a console.
 (function() {
