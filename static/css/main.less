@@ -1,6 +1,6 @@
 //--------------------------------------
-// Created: 29-11-2013
-// Created by: Nicolaj Lund Nielsen
+// Created: 18-08-2014
+// Created by: Bjarni Olsen
 // Modifiers:
 //--------------------------------------
 
@@ -19,6 +19,7 @@
    ============== */
 
 body {
+	height: 100%;
 	margin: 0;
 	padding: 0;
     color: @text-color;
@@ -55,12 +56,10 @@ img {
    ============== */
 html {
 	.box-sizing(border-box);
+	height: 100%;
 }
 *, *:before, *:after {
 	.box-sizing(inherit);
-}
-.site-wrapper {
-	margin-top: 10%;
 }
 .site-wrapper__title {
 	position: absolute;
@@ -69,27 +68,34 @@ html {
 	height: 1px;
 }
 .site-content {
-	position: relative;
-	max-width: 1685px;
-	height: 500px;
-	margin: 0 auto;
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	max-width: 1684px;
+	height: 842px;
+	margin: auto;
 	overflow: hidden;
-	background-color: white;
+	background-color: transparent;
 }
 .primary-nav {
 	position: absolute;
 	top: 0;
-	left: 100%;
-	right: auto;
+	left: auto;
+	right: 40px;
 	bottom: 0;
 	z-index: 4;
-	width: 30%;
+	width: 0;
 	margin: 0;
-	padding: 20px;
 	background-color: white;
+	-webkit-transition: all 700ms ease;
+	-moz-transition: all 700ms ease;
+	-o-transition: all 700ms ease;
+	transition: all 700ms ease;
 }
 .primary-nav:before {
-	content: "luk";
+	content: "";
 	position: absolute;
 	top: 0;
 	left: -60px;
@@ -97,66 +103,105 @@ html {
 	height: 60px;
 	line-height: 60px;
 	text-align: center;
-	background-color: lightblue;
+	background: rgba(255,255,255,0.6) url("img/menu.png") 0 0 no-repeat;
 	cursor: pointer;
 }
+.primary-nav ul {
+	margin: 0;
+	padding: 0;
+	visibility: hidden;
+}
 .primary-nav.is-active {
-	right: 0;
-	left: auto;
+	width: 30%;
+	ul {
+		visibility: visible;
+	}
 }
 .primary-nav__item {
 	float: left;
 	width: 25%;
-	height: 60px;
-	margin-top: -1px;
-	margin-left: -1px;
 	list-style: none;
-	border: 1px solid #d5d5d5;
+	position: relative;
+}
+.primary-nav__item:before {
+	content: "";
+	display: block;
+	padding-top: 100%;
 }
 .primary-nav__link {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
 	display: block;
 	text-align: center;
-	line-height: 60px;
-	font-size: 20px;
-	forn-weight: 700;
+	padding-top: 50%;
+	margin-top: -10px;
+	font-size: 18px;
 	text-decoration: none;
 	text-transform: uppercase;
 	color: #656565;
 }
+@media all and (max-width: 1683px) {
+	.primary-nav__item {
+	}
+	.primary-nav__link {
+	}
+}
 .primary-nav__link:hover {
 	background-color: #f5f5f5;
 	text-decoration: none;
-}
-.site-content__paginator {
 }
 .site-content__paginator__prev,
 .site-content__paginator__next {
 	position: absolute;
 	z-index: 4;
 	left: 50%;
-	background: red none;
 	border: none;
-	width: 50px;
-	height: 50px;
-	border-radius: 50%;
-	margin-left: -25px;
-	color: black;
+	width: 74px;
+	height: 74px;
+	margin-left: -37px;
+	overflow: hidden;
+	text-indent: -9999px;
 }
 .site-content__paginator__prev {
-	top: 0;
+	top: 30px;
+	background: transparent url("img/buttons.png") 0 0 no-repeat;
 }
 .site-content__paginator__next {
-	bottom: 0;
+	bottom: 30px;
+	background: transparent url("img/buttons.png") 0 -74px no-repeat;
+}
+.primary-nav,
+.site-content__paginator__prev,
+.site-content__paginator__next {
+	opacity: 0;
+	-webkit-transition: all 700ms ease;
+	-moz-transition: all 700ms ease;
+	-o-transition: all 700ms ease;
+	transition: all 700ms ease;
+}
+.site-content:hover {
+	.primary-nav,
+	.site-content__paginator__prev,
+	.site-content__paginator__next {
+		opacity: 1;
+		-webkit-transition: all 700ms ease;
+		-moz-transition: all 700ms ease;
+		-o-transition: all 700ms ease;
+		transition: all 700ms ease;
+	}
 }
 .site-content__wrapper {
 	position: absolute;
-	z-index: 3;
-	top: 0;
-	right: 0;
-	bottom: 0;
-	left: 0;
-	&.dummy {
-		z-index: 2;
+	z-index: 2;
+	padding: 0 40px;
+	&.is-active {
+		z-index: 4;
+	}
+	&.is-previous {
+		z-index: 3;
 	}
 }
 .page {
@@ -172,11 +217,6 @@ html {
 .col {
 	width: 50%;
 	float: left;
-	padding-right: 1px;
-	& + .col {
-		padding-left: 1px;
-		padding-right: 0;
-	}
 }
 .image-wrap {
 	> img {
