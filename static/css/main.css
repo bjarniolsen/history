@@ -364,8 +364,11 @@ html {
   transition: all 700ms ease;
 }
 .site-content:hover .primary-nav,
+.do-show-controls .primary-nav,
 .site-content:hover .site-content__paginator__prev,
-.site-content:hover .site-content__paginator__next {
+.do-show-controls .site-content__paginator__prev,
+.site-content:hover .site-content__paginator__next,
+.do-show-controls .site-content__paginator__next {
   opacity: 1;
   -webkit-transition: all 700ms ease;
   -moz-transition: all 700ms ease;

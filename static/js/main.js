@@ -6,11 +6,10 @@
 */
 
 /*
- * TODO: Fix the fucking timing for animations, stupid!!
- * TODO: Should animation be JS?
- * TODO: Add CSS, Images
- * TODO: Add text to pages and add media queries
- * TODO: Add HTML/HEAD... to all pages
+ * TODO: It fails hard to use $(document).trigger... !!! 
+ *  --- Keyboard controls: up=prev, down=next, left=open menu, esc/right=close menu
+ * TODO: Add text to "pages" 
+ * TODO: Add media queries
  *
  */
 
@@ -49,9 +48,17 @@ jQuery(function ($) {
 				if (index === options.numberOfPages) {
             		// Load frontpage on first init
             		// unless cookie has page information
-        			options.url = options.startPage;
-        			options.previousPage = options.url;
-					$("#side0").addClass("is-active");
+            		// check page status cookie.
+					var pageStatus = Engine.cookie.read('playbook');
+					if (pageStatus) {
+						options.url = pageStatus.split(",")[0];
+						options.pageNumber = pageStatus.split(",")[1];
+						$('#' + options.url).addClass("is-active");
+					} else {
+        				options.url = options.startPage;
+        				options.previousPage = options.url;
+						$("#side0").addClass("is-active");
+					}
 
 					window.setTimeout(function() {
 						options.content.css("height", $("#side0").find("img").height());
@@ -59,7 +66,7 @@ jQuery(function ($) {
 				}
 			}
 			
-            // Custom event
+            // Custom events
             $(document).bind("load.page", function(event, options) {
 				console.log(options.url);
 				if (!(options.pageNumber <= options.numberOfPages - 1)) {
@@ -68,45 +75,20 @@ jQuery(function ($) {
 				}
 				Engine.ui.showPage(options);
             });
-            options.menu.on({
-            	click: function() {
-            		if($(this).hasClass("is-active")) {
-            			$(this).removeClass("is-active");
-            		} else {
-            			$(this).addClass("is-active");
-            		}
-            	},
-            	mouseout: function() {
-					//options.menu.removeClass("is-active");
-					//console.log($(this));
+
+            options.menu.on("click", function() {
+            	if($(this).hasClass("is-active")) {
+					Engine.ui.closeMenu(options);
+            	} else {
+					Engine.ui.openMenu(options);
             	}
             });
 			// Click events
 			options.paginator.next.on("click", function() {
-        		// get pageNumber from url
-        		options.pageNumber = options.url.replace(/\D/g, '');
-        		options.pageNumber++;
-        		// Append pageNumber to url
-        		options.url = options.url.replace(/\d+/g, options.pageNumber);
-        		// disable button
-        		Engine.ui.button.disable($(this));
-
-				$(document).trigger("load.page", options);
+				Engine.ui.nextPage(options);
 			});
 			options.paginator.prev.on("click", function() {
-        		// get pageNumber from url
-        		//options.pageNumber = options.url.replace(/\D/g, '');
-        		if (options.pageNumber >= 1) {
-        			options.pageNumber--;
-        			// Append pageNumber to url
-        			options.url = options.url.replace(/\d+/g, options.pageNumber);
-        			console.log(options.url);
-        			// disable button
-        			Engine.ui.button.disable($(this));
-					$(document).trigger("load.page", options);
-        		} else {
-        			Engine.ui.button.disable($(this));
-        		}
+				Engine.ui.prevPage(options);
 			});
             options.menuItems.each(function(i, link) {
             	$(link).on("click", function(event) {
@@ -117,30 +99,29 @@ jQuery(function ($) {
 					$(document).trigger("load.page", options);
             	});
             });
-            // Check page status cookie.
-            // If cookie stores page and pagenumber then open that page.
-			/*var pageStatus = Engine.cookie.read('playbook');
-			if (pageStatus) {
-				options.url = pageStatus.split(",")[0];
-				options.pageNumber = pageStatus.split(",")[1];
-			}*/
-			/*window.setTimeout(function() {
-				if (pageStatus) {
-					$(".dummy").addClass("animatePrev");
+            $("body").bind("keyup", function(event) {
+				event.preventDefault();
+				if (event.which == 38) { // UP ARROW
+					Engine.ui.prevPage(options);
+				} else if (event.which == 40) { // DOWN ARROW
+					Engine.ui.nextPage(options);
+				} else if (event.which == 37) { // LEFT ARROW
+					Engine.ui.openMenu(options);
+				} else if (event.which == 27 || event.which == 39) { // ESC or RIGHT ARROW KEYS
+					Engine.ui.closeMenu(options);
 				}
-				$(document).trigger("load.page", options);
-			}, 900);*/
-			//$(document).trigger("load.page", options);
+			});
         },
         ui: {
         	showPage: function(options) {
-				
 				// add/remove classes
 				$(".site-content__wrapper").removeClass("animateCurrent animatePrev is-active is-previous");
 				$('#' + options.previousPage).addClass("animatePrev is-previous");
 				$('#' + options.url).addClass("animateCurrent is-active");
 
 				options.previousPage = options.url;
+				// set cookie with new page number
+				Engine.cookie.create('playbook', [ options.url, options.pageNumber ], 2);
 
 				window.setTimeout(function() {
 					$(".site-content__wrapper").removeClass("animateCurrent animatePrev");
@@ -170,6 +151,40 @@ jQuery(function ($) {
 					html += '</div>';
 
 				return html;
+        	},
+        	nextPage: function(options) {
+        		// get pageNumber from url
+        		options.pageNumber = options.url.replace(/\D/g, '');
+        		options.pageNumber++;
+        		// Append pageNumber to url
+        		options.url = options.url.replace(/\d+/g, options.pageNumber);
+        		// disable button
+        		Engine.ui.button.disable($(this));
+
+				$(document).trigger("load.page", options);
+        	},
+        	prevPage: function(options) {
+        		// get pageNumber from url
+        		//options.pageNumber = options.url.replace(/\D/g, '');
+        		if (options.pageNumber >= 1) {
+        			options.pageNumber--;
+        			// Append pageNumber to url
+        			options.url = options.url.replace(/\d+/g, options.pageNumber);
+        			console.log(options.url);
+        			// disable button
+        			Engine.ui.button.disable($(this));
+					$(document).trigger("load.page", options);
+        		} else {
+        			Engine.ui.button.disable($(this));
+        		}
+        	},
+        	openMenu: function(options) {
+				options.menu.addClass("is-active")
+				options.content.addClass("do-show-controls");
+        	},
+        	closeMenu: function(options) {
+				options.menu.removeClass("is-active")
+				options.content.removeClass("do-show-controls");
         	},
         	button: {
         		disable: function(button) {
