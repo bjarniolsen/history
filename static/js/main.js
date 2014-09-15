@@ -24,49 +24,42 @@ jQuery(function ($) {
             options.content = $(".site-content");
             options.menu = options.content.find(".primary-nav");
             options.menuItems = options.menu.find(".primary-nav__link");
-            //options.content = options.root.find(".site-content");
-			// we need to set a height on the page wrapper
             options.paginator = options.content.find(".js-paginator");
             options.paginator.next = options.paginator.find(".js-paginator__next");
             options.paginator.prev = options.paginator.find(".js-paginator__prev");
 
 			// build pages
-			var index = 0;
+			var index = 0, cache = [];
 			while (index < options.numberOfPages) {
 				pageId = "side" + index;
 				imageId = index;
 				// create new dom element and add new html to it
-				var cache = Engine.ui.addPageToDom(pageId, imageId);
-				// and add it to our wrapper
-				// TODO: Vent med at prepende...
-				options.content.prepend(cache);
-				// clear it for next use
-				cache = "";
+				cache.push(Engine.ui.addPageToDom(pageId, imageId));
 				index++;
-
-				if (index === options.numberOfPages) {
-            		// Load frontpage on first init
-            		// unless cookie has page information
-            		// check page status cookie.
-					var pageStatus = Engine.cookie.read('playbook');
-					if (pageStatus) {
-						options.url = pageStatus.split(",")[0];
-						options.pageNumber = pageStatus.split(",")[1];
-						$('#' + options.url).addClass("is-active");
-					} else {
-        				options.url = options.startPage;
-        				options.previousPage = options.url;
-						$("#side0").addClass("is-active");
-					}
-
-					// TODO: Brug jquery .load() på billed class...
-					/*window.setTimeout(function() {
-						options.content.css("height", $("#side0").find("img").height());
-					}, 1300);*/
-				}
 			}
-			// Smid array af div'er ind her
 			
+			// add markup to our wrapper
+			options.content.prepend(cache);
+			
+            // Load frontpage on first init
+            // unless cookie has page information
+            // check page status cookie.
+			var pageStatus = Engine.cookie.read('playbook');
+			if (pageStatus) {
+				options.url = pageStatus.split(",")[0];
+				options.pageNumber = pageStatus.split(",")[1];
+			} else {
+        		options.url = options.startPage;
+        		options.previousPage = options.url;
+			}
+
+			// show the page
+			var activePage = $("#" + options.url);
+			activePage.addClass("is-active");
+
+			options.activePageImage = activePage.find("img:first-child");
+			Engine.ui.setPageHeight(options, "init");
+
             // Custom events
             $(document).bind("load.page", function(event, options) {
 				console.log(options.url);
@@ -100,18 +93,12 @@ jQuery(function ($) {
 					$(document).trigger("load.page", options);
             	});
             });
-            $("body").bind("keyup", function(event) {
-				event.preventDefault();
-				if (event.which == 38) { // UP ARROW
-					Engine.ui.prevPage(options);
-				} else if (event.which == 40) { // DOWN ARROW
-					Engine.ui.nextPage(options);
-				} else if (event.which == 37) { // LEFT ARROW
-					Engine.ui.openMenu(options);
-				} else if (event.which == 27 || event.which == 39) { // ESC or RIGHT ARROW KEYS
-					Engine.ui.closeMenu(options);
-				}
-			});
+
+			Engine.ui.bindEvents(options);
+
+			window.onresize = function(event) {
+				Engine.ui.setPageHeight(options, "resize");
+			};
         },
         ui: {
         	showPage: function(options) {
@@ -127,6 +114,7 @@ jQuery(function ($) {
 				window.setTimeout(function() {
 					$(".site-content__wrapper").removeClass("animateCurrent animatePrev");
         			Engine.ui.button.enable([ options.paginator.next, options.paginator.prev ]);
+					Engine.ui.bindEvents(options);
 				}, 900);
 			},
         	addPageToDom: function(pageId, imageId) {
@@ -155,8 +143,9 @@ jQuery(function ($) {
         		options.pageNumber++;
         		// Append pageNumber to url
         		options.url = options.url.replace(/\d+/g, options.pageNumber);
-        		// disable button
+        		// disable button and keyboard while animating images
         		Engine.ui.button.disable($(this));
+				$("body").unbind("keyup");
 
 				$(document).trigger("load.page", options);
         	},
@@ -169,11 +158,31 @@ jQuery(function ($) {
         			options.url = options.url.replace(/\d+/g, options.pageNumber);
         			console.log(options.url);
         			// disable button
-        			Engine.ui.button.disable($(this));
 					$(document).trigger("load.page", options);
-        		} else {
-        			Engine.ui.button.disable($(this));
         		}
+        		// disable button and keyboard while animating images
+        		Engine.ui.button.disable($(this));
+				$("body").unbind("keyup");
+        	},
+        	setPageHeight: function(options, state) {
+				if (state === "init") {
+            		$.fn.imageLoad = function(fn){
+    					this.load(fn);
+    					this.each( function() {
+        					if ( this.complete && this.naturalWidth !== 0 ) {
+            					$(this).trigger('load');
+        					}
+    					});
+					}
+					options.activePageImage.imageLoad(function() {
+						// get image height to define site-content height
+						options.content.css("height", $(this).height());
+					});
+				}
+				if (state === "resize") {
+					// get height of first image of active page 
+					options.content.css("height", $("#" + options.url + " img:first-child").height());
+				}
         	},
         	openMenu: function(options) {
 				options.menu.addClass("is-active")
@@ -202,6 +211,20 @@ jQuery(function ($) {
         				$(button).removeAttr("disabled");
         			}
         		}
+        	},
+        	bindEvents: function(options) {
+            	$("body").bind("keyup", function(event) {
+					event.preventDefault();
+					if (event.which == 38) { // UP ARROW
+						Engine.ui.prevPage(options);
+					} else if (event.which == 40) { // DOWN ARROW
+						Engine.ui.nextPage(options);
+					} else if (event.which == 37) { // LEFT ARROW
+						Engine.ui.openMenu(options);
+					} else if (event.which == 27 || event.which == 39) { // ESC or RIGHT ARROW KEYS
+						Engine.ui.closeMenu(options);
+					}
+				});
         	}
         },
 		cookie: {
