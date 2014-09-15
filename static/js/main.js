@@ -6,8 +6,6 @@
 */
 
 /*
- * TODO: It fails hard to use $(document).trigger... !!! 
- *  --- Keyboard controls: up=prev, down=next, left=open menu, esc/right=close menu
  * TODO: Add text to "pages" 
  * TODO: Add media queries
  *
@@ -40,6 +38,7 @@ jQuery(function ($) {
 				// create new dom element and add new html to it
 				var cache = Engine.ui.addPageToDom(pageId, imageId);
 				// and add it to our wrapper
+				// TODO: Vent med at prepende...
 				options.content.prepend(cache);
 				// clear it for next use
 				cache = "";
@@ -60,11 +59,13 @@ jQuery(function ($) {
 						$("#side0").addClass("is-active");
 					}
 
-					window.setTimeout(function() {
+					// TODO: Brug jquery .load() på billed class...
+					/*window.setTimeout(function() {
 						options.content.css("height", $("#side0").find("img").height());
-					}, 1300);
+					}, 1300);*/
 				}
 			}
+			// Smid array af div'er ind her
 			
             // Custom events
             $(document).bind("load.page", function(event, options) {
@@ -135,15 +136,11 @@ jQuery(function ($) {
             	var html = '<div class="site-content__wrapper" id="' + pageId + '">';
 					html += '<div class="page">';
 					html += '<div class="col">';
-					html += '<h1>Forside</h1>';
-					html += '<p>Og noget tekst til forsiden</p>';
 					html += '<div class="image-wrap">';
 					html += '<img src="/static/media/images/Playbook_images' + imageId + '.jpg" alt=""/>';
 					html += '</div>';
 					html += '</div>';
 					html += '<div class="col">';
-					html += '<h1>Side 1</h1>';
-					html += '<p>Og noget tekst til side 1</p>';
 					html += '<div class="image-wrap">';
 					html += '<img src="/static/media/images/Playbook_images' + parseInt(imageId + 1) + '.jpg" alt=""/>';
 					html += '</div>';
