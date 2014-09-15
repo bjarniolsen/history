@@ -94,6 +94,7 @@ jQuery(function ($) {
             	});
             });
 
+			// bind keyup events
 			Engine.ui.bindEvents(options);
 
 			window.onresize = function(event) {
