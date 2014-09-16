@@ -247,6 +247,61 @@ html {
   box-sizing: inherit;
   /* Opera/IE 8+ */
 }
+.loader {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+.loader > div {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: 140px;
+  height: 140px;
+  margin-top: -70px;
+  margin-left: -70px;
+  border-radius: 50%;
+  background-color: rgba(200, 200, 200, 0.7);
+  -webkit-animation: rota 6s linear infinite;
+  animation: rota 6s linear infinite;
+}
+.loader > div:after {
+  content: " ";
+  position: absolute;
+  z-index: 2;
+  width: 120px;
+  height: 140px;
+  border-radius: 50%;
+  background-color: rgba(230, 230, 230, 0.7);
+}
+@-webkit-keyframes rota {
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}
+@-moz-keyframes rota {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes rota {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
 .site-wrapper__title {
   position: absolute;
   top: -100%;
@@ -424,19 +479,35 @@ html {
   display: block;
   height: auto;
 }
-.animatePrev .col img {
-  -webkit-animation: imageLeftPrev 800ms ease forwards;
-  animation: imageLeftPrev 800ms ease forwards;
-}
-.animatePrev .col + .col img {
+.animatePrevPrev .col img {
   -webkit-animation: imageRightPrev 800ms ease forwards;
   animation: imageRightPrev 800ms ease forwards;
 }
-.animateCurrent .col img {
+.animatePrevPrev .col + .col img {
+  -webkit-animation: imageLeftPrev 800ms ease forwards;
+  animation: imageLeftPrev 800ms ease forwards;
+}
+.animateCurrentPrev .col img {
+  -webkit-animation: imageRightCurrent 800ms ease forwards;
+  animation: imageRightCurrent 800ms ease forwards;
+}
+.animateCurrentPrev .col + .col img {
   -webkit-animation: imageLeftCurrent 800ms ease forwards;
   animation: imageLeftCurrent 800ms ease forwards;
 }
-.animateCurrent .col + .col img {
+.animatePrevNext .col img {
+  -webkit-animation: imageLeftPrev 800ms ease forwards;
+  animation: imageLeftPrev 800ms ease forwards;
+}
+.animatePrevNext .col + .col img {
+  -webkit-animation: imageRightPrev 800ms ease forwards;
+  animation: imageRightPrev 800ms ease forwards;
+}
+.animateCurrentNext .col img {
+  -webkit-animation: imageLeftCurrent 800ms ease forwards;
+  animation: imageLeftCurrent 800ms ease forwards;
+}
+.animateCurrentNext .col + .col img {
   -webkit-animation: imageRightCurrent 800ms ease forwards;
   animation: imageRightCurrent 800ms ease forwards;
 }

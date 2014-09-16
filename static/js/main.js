@@ -21,6 +21,7 @@ jQuery(function ($) {
         	// pages count = number of images / 2
 			options.numberOfPages = 60;
             // Cache some dom
+			options.loader = $('<div class="loader"><div/></div>').appendTo("body");
             options.content = $(".site-content");
             options.menu = options.content.find(".primary-nav");
             options.menuItems = options.menu.find(".primary-nav__link");
@@ -40,6 +41,16 @@ jQuery(function ($) {
 			
 			// add markup to our wrapper
 			options.content.prepend(cache);
+
+			$(window).load(function() {
+				options.loader.hide();				
+				options.content.addClass("do-show-controls");
+				// bind keyup events
+				Engine.ui.bindEvents(options);
+				window.setTimeout(function() {
+					options.content.removeClass("do-show-controls");
+				}, 1000);
+			});
 			
             // Load frontpage on first init
             // unless cookie has page information
@@ -50,7 +61,6 @@ jQuery(function ($) {
 				options.pageNumber = pageStatus.split(",")[1];
 			} else {
         		options.url = options.startPage;
-        		options.previousPage = options.url;
 			}
 
 			// show the page
@@ -70,6 +80,7 @@ jQuery(function ($) {
 				Engine.ui.showPage(options);
             });
 
+			// Click events
             options.menu.on("click", function() {
             	if($(this).hasClass("is-active")) {
 					Engine.ui.closeMenu(options);
@@ -77,7 +88,6 @@ jQuery(function ($) {
 					Engine.ui.openMenu(options);
             	}
             });
-			// Click events
 			options.paginator.next.on("click", function() {
 				Engine.ui.nextPage(options);
 			});
@@ -90,34 +100,80 @@ jQuery(function ($) {
             		// only get page name from url - side1, side2, sidex...
             		options.url = $(this)[0].pathname.split("/").pop().replace(".html", "");
         			options.pageNumber = options.url.replace(/\D/g, '');
+
+        			// disable button and keyboard while animating images
+        			Engine.ui.button.disable($(this));
+					$("body").unbind("keyup");
+
 					$(document).trigger("load.page", options);
             	});
             });
 
-			// bind keyup events
-			Engine.ui.bindEvents(options);
-
+			// set page height on wrapper on resize
 			window.onresize = function(event) {
 				Engine.ui.setPageHeight(options, "resize");
 			};
         },
         ui: {
         	showPage: function(options) {
+				// suffix animate classes with page direction prev/next
+				var classes = ["animateCurrent", "animatePrev"].map(function(klass) {
+					return klass + options.pageDirection;
+				}).join(" ");
+
 				// add/remove classes
-				$(".site-content__wrapper").removeClass("animateCurrent animatePrev is-active is-previous");
-				$('#' + options.previousPage).addClass("animatePrev is-previous");
-				$('#' + options.url).addClass("animateCurrent is-active");
+				$(".site-content__wrapper").removeClass(classes + " is-active is-previous");
+				$('#' + options.previousPage).addClass("animatePrev" + options.pageDirection + " is-previous");
+				$('#' + options.url).addClass("animateCurrent" + options.pageDirection + " is-active");
 
 				options.previousPage = options.url;
 				// set cookie with new page number
-				Engine.cookie.create('playbook', [ options.url, options.pageNumber ], 2);
+				Engine.cookie.create('playbook', [ options.url, options.pageNumber ], 0.2);
 
 				window.setTimeout(function() {
-					$(".site-content__wrapper").removeClass("animateCurrent animatePrev");
+					$(".site-content__wrapper").removeClass(classes);
         			Engine.ui.button.enable([ options.paginator.next, options.paginator.prev ]);
 					Engine.ui.bindEvents(options);
 				}, 900);
 			},
+        	nextPage: function(options) {
+                // set previous page
+                if (!options.previousPage) {
+					options.previousPage = options.url;
+                }
+        		// get pageNumber from url
+        		options.pageNumber = options.url.replace(/\D/g, '');
+        		options.pageNumber++;
+        		// Append pageNumber to url
+        		options.url = options.url.replace(/\d+/g, options.pageNumber);
+        		// disable button and keyboard while animating images
+        		Engine.ui.button.disable([ options.paginator.next, options.paginator.prev ]);
+				$("body").unbind("keyup");
+
+				options.pageDirection = "Next";
+
+				$(document).trigger("load.page", options);
+        	},
+        	prevPage: function(options) {
+                // set previous page
+                if (!options.previousPage) {
+					options.previousPage = options.url;
+                }
+        		// get pageNumber from url
+        		//options.pageNumber = options.url.replace(/\D/g, '');
+        		if (options.pageNumber >= 1) {
+        			options.pageNumber--;
+        			// Append pageNumber to url
+        			options.url = options.url.replace(/\d+/g, options.pageNumber);
+        			// disable button and keyboard while animating images
+        			Engine.ui.button.disable([ options.paginator.next, options.paginator.prev ]);
+					$("body").unbind("keyup");
+
+					options.pageDirection = "Prev";
+
+					$(document).trigger("load.page", options);
+        		}
+        	},
         	addPageToDom: function(pageId, imageId) {
 
 				imageId = imageId * 2;
@@ -137,33 +193,6 @@ jQuery(function ($) {
 					html += '</div>';
 
 				return html;
-        	},
-        	nextPage: function(options) {
-        		// get pageNumber from url
-        		options.pageNumber = options.url.replace(/\D/g, '');
-        		options.pageNumber++;
-        		// Append pageNumber to url
-        		options.url = options.url.replace(/\d+/g, options.pageNumber);
-        		// disable button and keyboard while animating images
-        		Engine.ui.button.disable($(this));
-				$("body").unbind("keyup");
-
-				$(document).trigger("load.page", options);
-        	},
-        	prevPage: function(options) {
-        		// get pageNumber from url
-        		//options.pageNumber = options.url.replace(/\D/g, '');
-        		if (options.pageNumber >= 1) {
-        			options.pageNumber--;
-        			// Append pageNumber to url
-        			options.url = options.url.replace(/\d+/g, options.pageNumber);
-        			console.log(options.url);
-        			// disable button
-					$(document).trigger("load.page", options);
-        		}
-        		// disable button and keyboard while animating images
-        		Engine.ui.button.disable($(this));
-				$("body").unbind("keyup");
         	},
         	setPageHeight: function(options, state) {
 				if (state === "init") {
