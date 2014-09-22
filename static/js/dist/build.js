@@ -132,7 +132,7 @@ jQuery(function ($) {
 
 				options.previousPage = options.url;
 				// set cookie with new page number
-				Engine.cookie.create('playbook', [ options.url, options.pageNumber ], 0.2);
+				Engine.cookie.create('playbook', [ options.url, options.pageNumber ]);
 
 				window.setTimeout(function() {
 					$(".site-content__wrapper").removeClass(classes);
