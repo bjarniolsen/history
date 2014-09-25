@@ -96,7 +96,6 @@ jQuery(function ($) {
 			});
             options.menuItems.each(function(i, link) {
             	$(link).on("click", function(event) {
-            		console.log(event);
             		event.preventDefault();
             		// only get page name from url - side1, side2, sidex...
             		options.url = $(this)[0].pathname.split("/").pop().replace(".html", "");
@@ -114,12 +113,9 @@ jQuery(function ($) {
 			window.onresize = function(event) {
 				Engine.ui.setPageHeight(options, "resize");
 			};
-
-			console.log(options.url);
         },
         ui: {
         	showPage: function(options) {
-				console.log("showPage");
 				// suffix animate classes with page direction prev/next
 				var classes = ["animateCurrent", "animatePrev"].map(function(klass) {
 					return klass + options.pageDirection;
