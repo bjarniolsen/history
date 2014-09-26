@@ -53,9 +53,9 @@ jQuery(function ($) {
 			});
 			
             // Load frontpage on first init
-            // unless cookie has page information
-            // check page status cookie.
-			var pageStatus = Engine.cookie.read('playbook');
+            // unless sessionStorage has page information
+            // check page status in sessionStorage.
+			var pageStatus = Engine.pageState.read('playbook');
 			if (pageStatus) {
 				options.url = pageStatus.split(",")[0];
 				options.pageNumber = pageStatus.split(",")[1];
@@ -127,8 +127,8 @@ jQuery(function ($) {
 				$('#' + options.url).addClass("animateCurrent" + options.pageDirection + " is-active");
 
 				options.previousPage = options.url;
-				// set cookie with new page number
-				Engine.cookie.create('playbook', [ options.url, options.pageNumber ]);
+				// set pageState with new page number
+				Engine.pageState.create('playbook', [ options.url, options.pageNumber ]);
 
 				window.setTimeout(function() {
 					$(".site-content__wrapper").removeClass(classes);
@@ -257,29 +257,21 @@ jQuery(function ($) {
 				});
         	}
         },
-		cookie: {
-			create: function (name, value, days) {
-				if (days) {
-					var date = new Date();
-					date.setTime(date.getTime()+(days*24*60*60*1000));
-					var expires = "; expires="+date.toGMTString();
-				} else {
-					var expires = ""; 
+		pageState: {
+			create: function (name, value) {
+				if (window.sessionStorage) {
+					sessionStorage.setItem(name, value);
 				}
-				document.cookie = name+"="+value+expires+"; path=/";
 			},
 			read: function (name) {
-				var nameEQ = name + "=";
-				var ca = document.cookie.split(';');
-				for(var i=0;i < ca.length;i++) {
-					var c = ca[i];
-					while (c.charAt(0)==' ') c = c.substring(1,c.length);
-					if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+				if (window.sessionStorage) {
+					return sessionStorage.getItem(name);
 				}
-				return null;
 			},
 			erase: function (name) {
-				cookie.create(name, "", -1);
+				if (window.sessionStorage) {
+					sessionStorage.removeItem(name);
+				}
 			}
 		}       
     }
